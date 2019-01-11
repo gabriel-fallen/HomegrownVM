@@ -1,7 +1,12 @@
+mod vm;
+
 #[cfg(test)]
 mod tests {
+    use crate::vm::*;
+    
     #[test]
     fn it_works() {
-        assert_eq!(2 + 2, 4);
+        let code = [Instruction::Push(1)];
+        let mut vm = VM_state::new(&code);
     }
 }
