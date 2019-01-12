@@ -1,6 +1,6 @@
 // VM instructions, state and interpreter
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Instruction {
   Push(i64),
   Pop,
