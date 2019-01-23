@@ -7,7 +7,7 @@ mod tests {
 
   #[test]
   fn vm_works() {
-    let code = [Push(1)];
+    let code = [PushI(1)];
     let mut vm = VmState::new(&code);
     let res = vm.run();
     assert_eq!(res, Ok(()));
@@ -16,36 +16,55 @@ mod tests {
 
   #[test]
   fn vm_adds() {
-    let code = [Push(1), Push(4), Add];
+    let code = [PushI(1), PushI(4), AddI];
     let mut vm = VmState::new(&code);
     let res = vm.run();
     assert_eq!(res, Ok(()));
     assert_eq!(vm.get(0), Ok(5));
   }
 
-  use crate::compiler::*;
+  #[test]
+  fn vm_subs() {
+    let code = [PushI(1), PushI(4), SubI];
+    let mut vm = VmState::new(&code);
+    let res = vm.run();
+    assert_eq!(res, Ok(()));
+    assert_eq!(vm.get(0), Ok(-3));
+  }
+
+  use crate::compiler::{*, Expr::*};
 
   #[test]
   fn compiles_lit() {
-    let expr = Expr::LitI(42);
+    let expr = LitI(42);
     let code = compile(expr);
-    assert_eq!(code, vec![Push(42)]);
+    assert_eq!(code, vec![PushI(42)]);
   }
 
   #[test]
   fn compiles_add() {
-    let expr = Expr::Add(Box::new(Expr::LitI(2)), Box::new(Expr::LitI(3)));
+    let expr = Add(Box::new(LitI(2)), Box::new(LitI(3)));
     let code = compile(expr);
-    assert_eq!(code, vec![Push(2), Push(3), Add]);
+    assert_eq!(code, vec![PushI(2), PushI(3), AddI]);
   }
 
   #[test]
   fn vm_adds_compiled() {
-    let expr = Expr::Add(Box::new(Expr::LitI(2)), Box::new(Expr::LitI(3)));
+    let expr = Add(Box::new(LitI(2)), Box::new(LitI(3)));
     let code = compile(expr);
     let mut vm = VmState::new(&code);
     let res = vm.run();
     assert_eq!(res, Ok(()));
     assert_eq!(vm.get(0), Ok(5));
+  }
+
+  #[test]
+  fn vm_subs_compiled() {
+    let expr = Sub(Box::new(LitI(2)), Box::new(LitI(3)));
+    let code = compile(expr);
+    let mut vm = VmState::new(&code);
+    let res = vm.run();
+    assert_eq!(res, Ok(()));
+    assert_eq!(vm.get(0), Ok(-1));
   }
 }

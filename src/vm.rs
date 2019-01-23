@@ -2,12 +2,12 @@
 
 #[derive(Debug, PartialEq)]
 pub enum Instruction {
-  Push(i64),
+  PushI(i64),
   Pop,
-  Add,
-  Sub,
-  Mul,
-  Div
+  AddI,
+  SubI,
+  MulI,
+  DivI
 }
 
 #[derive(Debug, PartialEq)]
@@ -20,6 +20,12 @@ pub enum VmError {
 pub trait VM {
   fn run(&mut self) -> Result<(), VmError>;
   fn get(&self, index: i32) -> Result<i64, VmError>; // get i-th element from the stack, negative index counts from the bottom
+  fn push_int(&mut self, val: i64) -> Result<(), VmError>;
+  fn pop(&mut self) -> Result<(), VmError>;
+  fn add_int(&mut self) -> Result<(), VmError>;
+  fn sub_int(&mut self) -> Result<(), VmError>;
+  fn mul_int(&mut self) -> Result<(), VmError>;
+  fn div_int(&mut self) -> Result<(), VmError>;
 }
 
 pub struct VmState<'a> {
@@ -56,61 +62,69 @@ impl<'a> VM for VmState<'a> {
 
     while self.pc < self.code.len() {
       match self.code[self.pc] {
-        Push(val) => self.stack.push(val),
-        Pop => drop(self.stack.pop()),
-        Add => {
-          let res = add(self.stack.pop(), self.stack.pop())?;
-          self.stack.push(res)
-        },
-        Sub => {
-          let res = sub(self.stack.pop(), self.stack.pop())?;
-          self.stack.push(res)
-        },
-        Mul => {
-          let res = mul(self.stack.pop(), self.stack.pop())?;
-          self.stack.push(res)
-        },
-        Div => {
-          let res = div(self.stack.pop(), self.stack.pop())?;
-          self.stack.push(res)
-        },
+        PushI(val) => self.push_int(val)?,
+        Pop        => self.pop()?,
+        AddI       => self.add_int()?,
+        SubI       => self.sub_int()?,
+        MulI       => self.mul_int()?,
+        DivI       => self.div_int()?,
       }
       self.pc += 1;
     }
 
     Ok(())
   }
-}
 
-fn add(val1: Option<i64>, val2: Option<i64>) -> Result<i64, VmError> {
-  match (val1, val2) {
-    (Some(a), Some(b)) => Ok(a + b),
-    _ => Err(VmError::OutOfBounds)
+  fn push_int(&mut self, val: i64) -> Result<(), VmError> {
+    self.stack.push(val);
+    Ok(())
   }
-}
 
-fn sub(val1: Option<i64>, val2: Option<i64>) -> Result<i64, VmError> {
-  match (val1, val2) {
-    (Some(a), Some(b)) => Ok(a - b),
-    _ => Err(VmError::OutOfBounds)
+  fn pop(&mut self) -> Result<(), VmError> {
+    drop(self.stack.pop());
+    Ok(())
   }
-}
 
-fn mul(val1: Option<i64>, val2: Option<i64>) -> Result<i64, VmError> {
-  match (val1, val2) {
-    (Some(a), Some(b)) => Ok(a * b),
-    _ => Err(VmError::OutOfBounds)
+  fn add_int(&mut self) -> Result<(), VmError> {
+    match (self.stack.pop(), self.stack.pop()) {
+      (Some(a), Some(b)) => {
+        self.stack.push(a + b);
+        Ok(())
+      },
+      _ => Err(VmError::OutOfBounds)
+    }
   }
-}
 
-fn div(val1: Option<i64>, val2: Option<i64>) -> Result<i64, VmError> {
-  match (val1, val2) {
-    (Some(a), Some(b)) => {
-      if b == 0 {
-        return Err(VmError::DivByZero)
-      }
-      Ok(a / b)
-    },
-    _ => Err(VmError::OutOfBounds)
+  fn sub_int(&mut self) -> Result<(), VmError> {
+    match (self.stack.pop(), self.stack.pop()) {
+      (Some(a), Some(b)) => {
+        self.stack.push(b - a); // REVERSE ORDER
+        Ok(())
+      },
+      _ => Err(VmError::OutOfBounds)
+    }
+  }
+
+  fn mul_int(&mut self) -> Result<(), VmError> {
+    match (self.stack.pop(), self.stack.pop()) {
+      (Some(a), Some(b)) => {
+        self.stack.push(a * b);
+        Ok(())
+      },
+      _ => Err(VmError::OutOfBounds)
+    }
+  }
+
+  fn div_int(&mut self) -> Result<(), VmError> {
+    match (self.stack.pop(), self.stack.pop()) {
+      (Some(a), Some(b)) => {
+        if a == 0 {
+          return Err(VmError::DivByZero)
+        }
+        self.stack.push(b / a); // REVERSE ORDER
+        Ok(())
+      },
+      _ => Err(VmError::OutOfBounds)
+    }
   }
 }
