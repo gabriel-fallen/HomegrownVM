@@ -11,7 +11,7 @@ mod tests {
     let mut vm = VmState::new(&code);
     let res = vm.run();
     assert_eq!(res, Ok(()));
-    assert_eq!(vm.get(0), Ok(1));
+    assert_eq!(vm.get_int(0), Ok(1));
   }
 
   #[test]
@@ -20,7 +20,7 @@ mod tests {
     let mut vm = VmState::new(&code);
     let res = vm.run();
     assert_eq!(res, Ok(()));
-    assert_eq!(vm.get(0), Ok(5));
+    assert_eq!(vm.get_int(0), Ok(5));
   }
 
   #[test]
@@ -29,7 +29,16 @@ mod tests {
     let mut vm = VmState::new(&code);
     let res = vm.run();
     assert_eq!(res, Ok(()));
-    assert_eq!(vm.get(0), Ok(-3));
+    assert_eq!(vm.get_int(0), Ok(-3));
+  }
+
+  #[test]
+  fn vm_adds_float() {
+    let code = [PushF(1.1), PushF(4.5), AddF];
+    let mut vm = VmState::new(&code);
+    let res = vm.run();
+    assert_eq!(res, Ok(()));
+    assert_eq!(vm.get_float(0), Ok(5.6));
   }
 
   use crate::compiler::{*, Expr::*};
@@ -55,7 +64,7 @@ mod tests {
     let mut vm = VmState::new(&code);
     let res = vm.run();
     assert_eq!(res, Ok(()));
-    assert_eq!(vm.get(0), Ok(5));
+    assert_eq!(vm.get_int(0), Ok(5));
   }
 
   #[test]
@@ -65,6 +74,6 @@ mod tests {
     let mut vm = VmState::new(&code);
     let res = vm.run();
     assert_eq!(res, Ok(()));
-    assert_eq!(vm.get(0), Ok(-1));
+    assert_eq!(vm.get_int(0), Ok(-1));
   }
 }
